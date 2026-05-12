@@ -22,6 +22,8 @@ export function activate(context: vscode.ExtensionContext): void {
     const syncService = new SyncService(buffer, session, auth, output);
     const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 
+    session.setOutputChannel(output);
+
     output.info('Extension activated.');
 
     let signedIn = false;
@@ -137,6 +139,22 @@ export function activate(context: vscode.ExtensionContext): void {
             }
 
             vscode.window.showInformationMessage('DevVital AI: signed in.');
+        }),
+        vscode.commands.registerCommand('devvitalAI.startNewSession', async () => {
+            if (!(await auth.isSignedIn())) {
+                vscode.window.showInformationMessage('DevVital AI: sign in first to control sessions.');
+                return;
+            }
+            session.rotate('manual_start');
+            vscode.window.showInformationMessage('DevVital AI: started a new session.');
+        }),
+        vscode.commands.registerCommand('devvitalAI.endSession', async () => {
+            if (!(await auth.isSignedIn())) {
+                vscode.window.showInformationMessage('DevVital AI: sign in first to control sessions.');
+                return;
+            }
+            session.rotate('manual_end');
+            vscode.window.showInformationMessage('DevVital AI: session ended; a new one will start on your next edit.');
         }),
         vscode.commands.registerCommand('devvitalAI.signOut', async () => {
             if (!(await auth.isSignedIn())) {

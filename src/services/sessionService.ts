@@ -3,18 +3,51 @@ import { IDLE_THRESHOLD_MS } from '../constants/telemetryConfig';
 import { TelemetryEvent } from '../types/telemetry';
 import { SessionSnapshot } from '../types/session';
 import { isIdle } from '../heuristics/idleDetectionHeuristic';
+import { OutputChannelService } from './outputChannelService';
+
+export type RotationReason = 'idle' | 'manual_start' | 'manual_end';
 
 export class SessionService {
-    private readonly sessionId: string = randomUUID();
-    private readonly startedAt = Date.now();
+    private sessionId: string = randomUUID();
+    private startedAt = Date.now();
     private lastActivityAt = this.startedAt;
     private activeMs = 0;
     private idleMs = 0;
     private totalEventsCollected = 0;
     private saveEvents = 0;
     private editorSwitchEvents = 0;
+    private rotationCount = 0;
+    private output?: OutputChannelService;
+
+    public setOutputChannel(output: OutputChannelService): void {
+        this.output = output;
+    }
 
     public getSessionId(): string {
+        return this.sessionId;
+    }
+
+    public getLastActivityAt(): number {
+        return this.lastActivityAt;
+    }
+
+    public getRotationCount(): number {
+        return this.rotationCount;
+    }
+
+    public rotate(reason: RotationReason): string {
+        const previousId = this.sessionId;
+        this.sessionId = randomUUID();
+        const now = Date.now();
+        this.startedAt = now;
+        this.lastActivityAt = now;
+        this.activeMs = 0;
+        this.idleMs = 0;
+        this.totalEventsCollected = 0;
+        this.saveEvents = 0;
+        this.editorSwitchEvents = 0;
+        this.rotationCount += 1;
+        this.output?.info(`Session rotated (reason: ${reason}, previous: ${previousId}, new: ${this.sessionId})`);
         return this.sessionId;
     }
 

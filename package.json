@@ -32,6 +32,14 @@
       {
         "command": "devvitalAI.signOut",
         "title": "DevVital AI: Sign Out"
+      },
+      {
+        "command": "devvitalAI.startNewSession",
+        "title": "DevVital AI: Start New Session"
+      },
+      {
+        "command": "devvitalAI.endSession",
+        "title": "DevVital AI: End Session"
       }
     ],
     "configuration": {
@@ -47,6 +55,12 @@
           "default": 60,
           "minimum": 1,
           "description": "Number of seconds between automatic telemetry sync attempts."
+        },
+        "devvitalAI.idleSessionTimeoutMinutes": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "description": "Minutes of inactivity before the extension automatically starts a new session. The check is lazy — it runs when the next event arrives, not on a timer."
         }
       }
     }
