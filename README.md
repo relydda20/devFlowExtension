@@ -13,13 +13,37 @@ It does not analyze emotions, infer mental state, score productivity, detect bur
 - Terminal opens with terminal name and shell path when available
 - Optional Git activity via the built-in Git extension API
 
+## Authentication
+
+The extension authenticates with the backend using a long-lived API token. Tokens are stored in the OS keychain via VS Code's `SecretStorage` API — they never appear in `settings.json`, logs, or workspace files.
+
+1. Sign in to the backend (via `POST /api/v1/auth/login` or the OAuth flow) and obtain a JWT.
+2. Mint a token:
+
+   ```bash
+   curl -X POST http://localhost:3000/api/v1/auth/tokens \
+        -H "Authorization: Bearer <your-jwt>" \
+        -H "Content-Type: application/json" \
+        -d '{"name": "Work laptop"}'
+   ```
+
+   The response includes `token` (prefixed `dvf_…`) **shown once**. Copy it.
+3. In VS Code, run **DevVital AI: Sign In** from the command palette and paste the token.
+
+If the backend returns HTTP `401`/`403` the status bar changes to `$(alert) DevVital AI: Sign in required` and the sync timer stops. Click the status bar to sign in again — the buffered events are flushed on the next successful sync.
+
+To revoke a token: `DELETE /api/v1/auth/tokens/:id` with your JWT.
+
 ## Synchronization
 
 Telemetry is buffered in memory and posted every 60 seconds by default:
 
 ```text
 POST http://localhost:3000/api/v1/telemetry
+Authorization: Bearer dvf_<your-token>
 ```
+
+Each event carries a `session_id` (UUID v4) generated once per VS Code window activation, so the backend can group events from the same coding session.
 
 Payload shape:
 
@@ -49,6 +73,7 @@ Failed synchronization keeps the buffer intact and retries on the next interval.
 
 ## Commands
 
+- `DevVital AI: Sign In`
 - `DevVital AI: Flush Telemetry`
 - `DevVital AI: Show Telemetry Status`
 
