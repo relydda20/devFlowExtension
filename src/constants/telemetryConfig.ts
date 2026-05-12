@@ -1,0 +1,12 @@
+export const OUTPUT_CHANNEL_NAME = 'DevVital AI';
+export const CONFIGURATION_KEY = 'devvitalAI';
+export const DEFAULT_API_URL = 'http://localhost:3000/api/v1/telemetry';
+export const DEFAULT_SYNC_INTERVAL_SECONDS = 60;
+export const MAX_BUFFER_SIZE = 5000;
+export const IDLE_THRESHOLD_MS = 5 * 60 * 1000;
+export const LARGE_PASTE_CHARACTER_THRESHOLD = 100;
+export const REWRITE_WINDOW_MS = 3000;
+export const REWRITE_CHARACTER_THRESHOLD = 80;
+export const UNDO_WINDOW_MS = 5000;
+export const RAPID_SWITCH_WINDOW_MS = 60 * 1000;
+export const RAPID_SWITCH_THRESHOLD = 5;

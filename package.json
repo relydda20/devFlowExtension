@@ -1,0 +1,67 @@
+{
+  "name": "devvital-ai-telemetry-extension",
+  "displayName": "DevVital AI Telemetry Extension",
+  "description": "Lightweight VS Code telemetry extension for developer workflow activity.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.118.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:devvitalAI.flushTelemetry",
+    "onCommand:devvitalAI.showStatus"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devvitalAI.flushTelemetry",
+        "title": "DevVital AI: Flush Telemetry"
+      },
+      {
+        "command": "devvitalAI.showStatus",
+        "title": "DevVital AI: Show Telemetry Status"
+      }
+    ],
+    "configuration": {
+      "title": "DevVital AI",
+      "properties": {
+        "devvitalAI.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:3000/api/v1/telemetry",
+          "description": "Backend API endpoint used to receive telemetry payloads."
+        },
+        "devvitalAI.syncIntervalSeconds": {
+          "type": "number",
+          "default": 60,
+          "minimum": 1,
+          "description": "Number of seconds between automatic telemetry sync attempts."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "dependencies": {
+    "axios": "^1.13.2"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.118.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript-eslint": "^8.56.1",
+    "eslint": "^9.39.3",
+    "typescript": "^5.9.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}
