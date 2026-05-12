@@ -1,5 +1,6 @@
 export const OUTPUT_CHANNEL_NAME = 'DevVital AI';
 export const CONFIGURATION_KEY = 'devvitalAI';
+export const SECRET_KEY = 'devvitalAI.apiToken';
 export const DEFAULT_API_URL = 'http://localhost:3000/api/v1/telemetry';
 export const DEFAULT_SYNC_INTERVAL_SECONDS = 60;
 export const MAX_BUFFER_SIZE = 5000;

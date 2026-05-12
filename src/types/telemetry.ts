@@ -21,6 +21,7 @@ export interface BaseTelemetryEvent {
     type: TelemetryEventType;
     timestamp: string;
     workspace: string;
+    session_id: string;
 }
 
 export interface FileSaveTelemetryEvent extends BaseTelemetryEvent {
@@ -97,6 +98,14 @@ export type TelemetryEvent =
     | DebugSessionTelemetryEvent
     | TerminalTelemetryEvent
     | GitActivityTelemetryEvent;
+
+export type RawTelemetryEvent =
+    | Omit<FileSaveTelemetryEvent, 'session_id'>
+    | Omit<TextChangeTelemetryEvent, 'session_id'>
+    | Omit<EditorSwitchTelemetryEvent, 'session_id'>
+    | Omit<DebugSessionTelemetryEvent, 'session_id'>
+    | Omit<TerminalTelemetryEvent, 'session_id'>
+    | Omit<GitActivityTelemetryEvent, 'session_id'>;
 
 export interface TelemetryPayload {
     workspace: string;

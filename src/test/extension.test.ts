@@ -8,6 +8,7 @@ suite('Telemetry Types Test Suite', () => {
                 type: 'file_save',
                 timestamp: '2026-05-12T10:00:00.000Z',
                 workspace: 'project-name',
+                session_id: '00000000-0000-4000-8000-000000000000',
                 file: {
                     name: 'app.ts',
                     path: 'src/app.ts',

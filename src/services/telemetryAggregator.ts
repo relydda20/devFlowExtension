@@ -1,4 +1,4 @@
-import { TelemetryEvent } from '../types/telemetry';
+import { RawTelemetryEvent, TelemetryEvent } from '../types/telemetry';
 import { SessionService } from './sessionService';
 import { TelemetryBufferService } from './telemetryBufferService';
 
@@ -8,8 +8,9 @@ export class TelemetryAggregator {
         private readonly session: SessionService
     ) {}
 
-    public collect(event: TelemetryEvent): void {
-        this.session.recordEvent(event);
-        this.buffer.append(event);
+    public collect(event: RawTelemetryEvent): void {
+        const stamped = { ...event, session_id: this.session.getSessionId() } as TelemetryEvent;
+        this.session.recordEvent(stamped);
+        this.buffer.append(stamped);
     }
 }

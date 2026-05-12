@@ -1,9 +1,11 @@
+import { randomUUID } from 'crypto';
 import { IDLE_THRESHOLD_MS } from '../constants/telemetryConfig';
 import { TelemetryEvent } from '../types/telemetry';
 import { SessionSnapshot } from '../types/session';
 import { isIdle } from '../heuristics/idleDetectionHeuristic';
 
 export class SessionService {
+    private readonly sessionId: string = randomUUID();
     private readonly startedAt = Date.now();
     private lastActivityAt = this.startedAt;
     private activeMs = 0;
@@ -11,6 +13,10 @@ export class SessionService {
     private totalEventsCollected = 0;
     private saveEvents = 0;
     private editorSwitchEvents = 0;
+
+    public getSessionId(): string {
+        return this.sessionId;
+    }
 
     public recordEvent(event: TelemetryEvent): void {
         const now = Date.now();

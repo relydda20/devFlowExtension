@@ -24,6 +24,14 @@
       {
         "command": "devvitalAI.showStatus",
         "title": "DevVital AI: Show Telemetry Status"
+      },
+      {
+        "command": "devvitalAI.signIn",
+        "title": "DevVital AI: Sign In"
+      },
+      {
+        "command": "devvitalAI.signOut",
+        "title": "DevVital AI: Sign Out"
       }
     ],
     "configuration": {

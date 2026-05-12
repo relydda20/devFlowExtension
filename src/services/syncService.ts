@@ -8,6 +8,7 @@ import {
 import { TelemetryPayload } from '../types/telemetry';
 import { nowIso } from '../utils/timestampUtils';
 import { getWorkspaceName } from '../utils/workspaceUtils';
+import { AuthService, AuthState } from './authService';
 import { OutputChannelService } from './outputChannelService';
 import { SessionService } from './sessionService';
 import { TelemetryBufferService } from './telemetryBufferService';
@@ -16,16 +17,27 @@ export interface SyncResult {
     ok: boolean;
     sentCount: number;
     errorMessage?: string;
+    authFailure?: boolean;
 }
 
 export class SyncService implements vscode.Disposable {
     private timer?: NodeJS.Timeout;
+    private readonly authStateSubscription: vscode.Disposable;
 
     constructor(
         private readonly buffer: TelemetryBufferService,
         private readonly session: SessionService,
+        private readonly auth: AuthService,
         private readonly output: OutputChannelService
-    ) {}
+    ) {
+        this.authStateSubscription = this.auth.onDidChangeState((state: AuthState) => {
+            if (state === 'signed-in') {
+                this.start();
+            } else {
+                this.stop();
+            }
+        });
+    }
 
     public start(): void {
         this.stop();
@@ -44,6 +56,12 @@ export class SyncService implements vscode.Disposable {
     }
 
     public async sync(): Promise<SyncResult> {
+        const token = await this.auth.getToken();
+        if (!token) {
+            this.stop();
+            return { ok: false, sentCount: 0, authFailure: true, errorMessage: 'Not signed in' };
+        }
+
         const events = this.buffer.getQueuedTelemetry();
 
         if (events.length === 0) {
@@ -61,13 +79,26 @@ export class SyncService implements vscode.Disposable {
 
         try {
             await axios.post(this.getApiUrl(), payload, {
-                timeout: 10000
+                timeout: 10000,
+                headers: { Authorization: `Bearer ${token}` }
             });
             this.buffer.clearSuccessfulBatch(events.length);
             this.output.info(`Synchronization success: ${events.length} event(s) sent.`);
             return { ok: true, sentCount: events.length };
         } catch (error) {
             const errorMessage = this.formatError(error);
+            const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+            if (status === 401) {
+                this.stop();
+                this.output.warn('Synchronization rejected (HTTP 401); token cleared, sign-in required.');
+                await this.auth.clearToken();
+                return { ok: false, sentCount: 0, authFailure: true, errorMessage };
+            }
+            if (status === 403) {
+                this.stop();
+                this.output.warn('Synchronization rejected (HTTP 403); sign-in required.');
+                return { ok: false, sentCount: 0, authFailure: true, errorMessage };
+            }
             this.output.warn(`Synchronization failure: ${errorMessage}`);
             this.output.warn('Retry scheduled for next synchronization cycle.');
             return { ok: false, sentCount: 0, errorMessage };
@@ -76,6 +107,7 @@ export class SyncService implements vscode.Disposable {
 
     public dispose(): void {
         this.stop();
+        this.authStateSubscription.dispose();
     }
 
     private getApiUrl(): string {
