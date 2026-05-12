@@ -30,6 +30,10 @@
         "title": "DevVital AI: Sign In"
       },
       {
+        "command": "devvitalAI.signInWithToken",
+        "title": "DevVital AI: Sign In with Token"
+      },
+      {
         "command": "devvitalAI.signOut",
         "title": "DevVital AI: Sign Out"
       },
@@ -49,6 +53,11 @@
           "type": "string",
           "default": "http://localhost:3000/api/v1/telemetry",
           "description": "Backend API endpoint used to receive telemetry payloads."
+        },
+        "devvitalAI.apiBaseUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Backend base URL used for auth/pairing endpoints (e.g. https://api.example.com). Defaults to the host of devvitalAI.apiUrl."
         },
         "devvitalAI.syncIntervalSeconds": {
           "type": "number",

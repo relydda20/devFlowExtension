@@ -8,6 +8,8 @@ import { registerTextChangeListener } from './listeners/textChangeListener';
 import { CONFIGURATION_KEY } from './constants/telemetryConfig';
 import { AuthService } from './services/authService';
 import { OutputChannelService } from './services/outputChannelService';
+import { PairingService } from './services/pairingService';
+import { RecommendationService } from './services/recommendationService';
 import { SessionService } from './services/sessionService';
 import { SyncService, SyncResult } from './services/syncService';
 import { TelemetryAggregator } from './services/telemetryAggregator';
@@ -20,6 +22,8 @@ export function activate(context: vscode.ExtensionContext): void {
     const aggregator = new TelemetryAggregator(buffer, session);
     const auth = new AuthService(context);
     const syncService = new SyncService(buffer, session, auth, output);
+    const pairingService = new PairingService(output);
+    const recommendationService = new RecommendationService(auth, output);
     const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 
     session.setOutputChannel(output);
@@ -118,6 +122,43 @@ export function activate(context: vscode.ExtensionContext): void {
             );
         }),
         vscode.commands.registerCommand('devvitalAI.signIn', async () => {
+            const outcome = await vscode.window.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: 'DevVital AI: Waiting for browser approval…',
+                    cancellable: true
+                },
+                async (progress, cancelToken) => {
+                    return pairingService.runPairingFlow(cancelToken, (userCode) => {
+                        progress.report({ message: `Approve code ${userCode} in your browser` });
+                    });
+                }
+            );
+
+            if (outcome.kind === 'cancelled') {
+                return;
+            }
+            if (outcome.kind === 'expired') {
+                vscode.window.showWarningMessage('DevVital AI: pairing expired — please try again.');
+                return;
+            }
+            if (outcome.kind === 'error') {
+                vscode.window.showWarningMessage(`DevVital AI: sign-in failed. ${outcome.message}`);
+                return;
+            }
+
+            await auth.setToken(outcome.token);
+            const result = await syncService.sync();
+            applyResult(result);
+
+            if (result.authFailure) {
+                vscode.window.showWarningMessage('DevVital AI: paired token was rejected by the server. Please try again.');
+                return;
+            }
+
+            vscode.window.showInformationMessage('DevVital AI: signed in.');
+        }),
+        vscode.commands.registerCommand('devvitalAI.signInWithToken', async () => {
             const token = await vscode.window.showInputBox({
                 password: true,
                 ignoreFocusOut: true,
@@ -196,6 +237,16 @@ export function activate(context: vscode.ExtensionContext): void {
     const statusInterval = setInterval(updateStatusBar, 5000);
     context.subscriptions.push({
         dispose: () => clearInterval(statusInterval)
+    });
+
+    // Recommendation polling on the same default cadence as telemetry sync (60s).
+    // Independent of sync — failures here never affect telemetry, and vice versa.
+    const recommendationInterval = setInterval(() => {
+        if (!signedIn || lastAuthFailure) {return;}
+        void recommendationService.pollAndNotify();
+    }, 60_000);
+    context.subscriptions.push({
+        dispose: () => clearInterval(recommendationInterval)
     });
 }
 

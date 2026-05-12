@@ -15,20 +15,18 @@ It does not analyze emotions, infer mental state, score productivity, detect bur
 
 ## Authentication
 
-The extension authenticates with the backend using a long-lived API token. Tokens are stored in the OS keychain via VS Code's `SecretStorage` API — they never appear in `settings.json`, logs, or workspace files.
+The extension authenticates with the backend using a long-lived `dvf_` API token, stored in the OS keychain via VS Code's `SecretStorage` API — never in `settings.json`, logs, or workspace files.
 
-1. Sign in to the backend (via `POST /api/v1/auth/login` or the OAuth flow) and obtain a JWT.
-2. Mint a token:
+### Sign in via the browser (default)
 
-   ```bash
-   curl -X POST http://localhost:3000/api/v1/auth/tokens \
-        -H "Authorization: Bearer <your-jwt>" \
-        -H "Content-Type: application/json" \
-        -d '{"name": "Work laptop"}'
-   ```
+1. Run **DevVital AI: Sign In** from the command palette.
+2. The extension shows a short code (e.g. `BRWN-4F2X`) and opens your browser to the DevFlow website's `/extension/pair` page.
+3. Sign in to the website if you are not already, confirm the code matches, and click **Approve**.
+4. VS Code receives a freshly minted token automatically — no copy-paste.
 
-   The response includes `token` (prefixed `dvf_…`) **shown once**. Copy it.
-3. In VS Code, run **DevVital AI: Sign In** from the command palette and paste the token.
+### Sign in with a token (fallback for headless environments)
+
+If you cannot open a browser (SSH, restricted container), use **DevVital AI: Sign In with Token** instead and paste a `dvf_` token you minted via `POST /api/v1/auth/tokens` against your JWT session.
 
 If the backend returns HTTP `401`/`403` the status bar changes to `$(alert) DevVital AI: Sign in required` and the sync timer stops. Click the status bar to sign in again — the buffered events are flushed on the next successful sync.
 
@@ -68,12 +66,15 @@ Failed synchronization keeps the buffer intact and retries on the next interval.
 
 - `devvitalAI.apiUrl`
   - Default: `http://localhost:3000/api/v1/telemetry`
+- `devvitalAI.apiBaseUrl`
+  - Default: `""` (derived from `apiUrl`). Set explicitly when your backend is hosted at a different origin from the telemetry endpoint, e.g. `https://api.example.com`.
 - `devvitalAI.syncIntervalSeconds`
   - Default: `60`
 
 ## Commands
 
-- `DevVital AI: Sign In`
+- `DevVital AI: Sign In` — browser pairing (default)
+- `DevVital AI: Sign In with Token` — paste-token fallback for headless environments
 - `DevVital AI: Flush Telemetry`
 - `DevVital AI: Show Telemetry Status`
 
