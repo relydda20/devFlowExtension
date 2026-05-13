@@ -7,6 +7,8 @@ import {
 import { AuthService } from './authService';
 import { OutputChannelService } from './outputChannelService';
 
+type EvidenceItem = { metric: string; value: number | string };
+
 type PendingRecommendation = {
     id: number;
     state_type: string;
@@ -14,6 +16,7 @@ type PendingRecommendation = {
     recommendation_type: string;
     recommendation_text: string;
     reasoning: string | null;
+    evidence: EvidenceItem[];
     user_action: string | null;
     created_at: string;
 };
@@ -23,8 +26,22 @@ type PendingResponse = { recommendation: PendingRecommendation | null };
 const ACTION_LABELS = {
     accepted: 'Take it',
     snoozed: 'Snooze 30m',
-    dismissed: 'Dismiss'
+    dismissed: 'Dismiss',
+    why: 'Why?'
 } as const;
+
+function formatEvidence(evidence: EvidenceItem[]): string {
+    if (!evidence || evidence.length === 0) {return '';}
+    return evidence
+        .map((e) => {
+            const label = e.metric.replace(/_/g, ' ');
+            const value = typeof e.value === 'number'
+                ? (Number.isInteger(e.value) ? String(e.value) : e.value.toFixed(2))
+                : String(e.value);
+            return `${label}: ${value}`;
+        })
+        .join(' • ');
+}
 
 export class RecommendationService {
     private lastShownId: number | null = null;
@@ -93,12 +110,28 @@ export class RecommendationService {
     }
 
     private async showNotification(rec: PendingRecommendation, token: string): Promise<void> {
-        const choice = await vscode.window.showInformationMessage(
+        const hasEvidence = (rec.evidence && rec.evidence.length > 0) || !!rec.reasoning;
+        const buttons: string[] = [ACTION_LABELS.accepted, ACTION_LABELS.snoozed, ACTION_LABELS.dismissed];
+        if (hasEvidence) {buttons.push(ACTION_LABELS.why);}
+
+        let choice = await vscode.window.showInformationMessage(
             rec.recommendation_text,
-            ACTION_LABELS.accepted,
-            ACTION_LABELS.snoozed,
-            ACTION_LABELS.dismissed
+            ...buttons
         );
+
+        // If the user clicked "Why?", show the evidence panel and re-prompt for an action.
+        while (choice === ACTION_LABELS.why) {
+            const evidenceLine = formatEvidence(rec.evidence ?? []);
+            const detail = [rec.reasoning, evidenceLine].filter(Boolean).join('\n\n');
+            choice = await vscode.window.showInformationMessage(
+                detail || 'No detailed reasoning available.',
+                { modal: false },
+                ACTION_LABELS.accepted,
+                ACTION_LABELS.snoozed,
+                ACTION_LABELS.dismissed
+            );
+        }
+
         if (!choice) {return;} // user closed the toast without clicking; leave pending
 
         let action: 'accepted' | 'snoozed' | 'dismissed';
