@@ -3,6 +3,7 @@
   "displayName": "DevVital AI Telemetry Extension",
   "description": "Lightweight VS Code telemetry extension for developer workflow activity.",
   "version": "0.0.1",
+  "publisher": "DevFlow",
   "engines": {
     "vscode": "^1.118.0"
   },
