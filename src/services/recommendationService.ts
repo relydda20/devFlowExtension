@@ -77,12 +77,14 @@ export class RecommendationService {
             return;
         }
 
+        // 'real' and 'force' invoke Gemini server-side; 2.5 Flash can take ~10s. 'demo' is instant.
+        const timeout = mode === 'demo' ? 10000 : 30000;
         try {
             const response = await axios.post(
                 `${this.getApiBaseUrl()}/recommendations/trigger`,
                 { mode },
                 {
-                    timeout: 10000,
+                    timeout,
                     headers: {
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -91,8 +93,8 @@ export class RecommendationService {
             );
             this.output.info(`Trigger Insight (${mode}): HTTP ${response.status} ${JSON.stringify(response.data)}`);
         } catch (err) {
-            this.output.warn(`Trigger Insight (${mode}) failed: ${this.formatError(err)}`);
-            return;
+            this.output.warn(`Trigger Insight (${mode}) failed: ${this.formatError(err)}. The backend may still be processing — the popup may appear on the next 60s poll.`);
+            // Even on timeout, the backend often completes; let pollAndNotify pick it up.
         }
 
         await this.pollAndNotify();
