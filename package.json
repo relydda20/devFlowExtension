@@ -51,12 +51,12 @@
       "properties": {
         "devvitalAI.apiUrl": {
           "type": "string",
-          "default": "http://localhost:3000/api/v1/telemetry",
+          "default": "https://who-goes-to-try.hackathon.sev-2.com/api/v1/telemetry",
           "description": "Backend API endpoint used to receive telemetry payloads."
         },
         "devvitalAI.apiBaseUrl": {
           "type": "string",
-          "default": "",
+          "default": "https://who-goes-to-try.hackathon.sev-2.com",
           "description": "Backend base URL used for auth/pairing endpoints (e.g. https://api.example.com). Defaults to the host of devvitalAI.apiUrl."
         },
         "devvitalAI.syncIntervalSeconds": {

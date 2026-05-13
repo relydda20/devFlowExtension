@@ -1,8 +1,8 @@
 export const OUTPUT_CHANNEL_NAME = 'DevVital AI';
 export const CONFIGURATION_KEY = 'devvitalAI';
 export const SECRET_KEY = 'devvitalAI.apiToken';
-export const DEFAULT_API_URL = 'http://localhost:3000/api/v1/telemetry';
-export const DEFAULT_API_BASE_URL = 'http://localhost:3000';
+export const DEFAULT_API_URL = 'https://who-goes-to-try.hackathon.sev-2.com/api/v1/telemetry';
+export const DEFAULT_API_BASE_URL = 'https://who-goes-to-try.hackathon.sev-2.com';
 export const DEFAULT_SYNC_INTERVAL_SECONDS = 60;
 export const MAX_BUFFER_SIZE = 5000;
 export const IDLE_THRESHOLD_MS = 5 * 60 * 1000;
