@@ -53,6 +53,34 @@ export class RecommendationService {
         void this.showNotification(pending, token);
     }
 
+    public async triggerInsight(mode: 'real' | 'force' | 'demo'): Promise<void> {
+        const token = await this.auth.getToken();
+        if (!token) {
+            this.output.warn('Trigger Insight: not signed in, skipping.');
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `${this.getApiBaseUrl()}/recommendations/trigger`,
+                { mode },
+                {
+                    timeout: 10000,
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            this.output.info(`Trigger Insight (${mode}): HTTP ${response.status} ${JSON.stringify(response.data)}`);
+        } catch (err) {
+            this.output.warn(`Trigger Insight (${mode}) failed: ${this.formatError(err)}`);
+            return;
+        }
+
+        await this.pollAndNotify();
+    }
+
     private async fetchPending(token: string): Promise<PendingRecommendation | null> {
         const response = await axios.get<PendingResponse>(
             `${this.getApiBaseUrl()}/recommendations/pending`,

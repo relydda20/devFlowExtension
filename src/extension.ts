@@ -199,6 +199,18 @@ export function activate(context: vscode.ExtensionContext): void {
             session.rotate('manual_end');
             vscode.window.showInformationMessage('DevVital AI: session ended; a new one will start on your next edit.');
         }),
+        vscode.commands.registerCommand('devvitalAI.triggerInsight', async () => {
+            const choice = await vscode.window.showQuickPick(
+                [
+                    { label: 'Real check', detail: 'Runs the real evaluator (respects cooldown).', mode: 'real' as const },
+                    { label: 'Force (bypass cooldown)', detail: 'Expires latest pending, then evaluates.', mode: 'force' as const },
+                    { label: 'Demo popup', detail: 'Fabricates a canned recommendation. No LLM call.', mode: 'demo' as const }
+                ],
+                { placeHolder: 'Trigger an insight popup how?' }
+            );
+            if (!choice) {return;}
+            await recommendationService.triggerInsight(choice.mode);
+        }),
         vscode.commands.registerCommand('devvitalAI.signOut', async () => {
             if (!(await auth.isSignedIn())) {
                 return;
